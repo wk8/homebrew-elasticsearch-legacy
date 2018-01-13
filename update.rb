@@ -50,7 +50,7 @@ class Updater
       # and no need to create a formula for it anyway
       if is_latest_version
         is_latest_version = false
-      else
+      elsif keep_version?(version)
         formula_path = File.join(formulae_directory, "elasticsearch@#{version}.rb")
         File.write(formula_path, amend_formula(contents, version))
       end
@@ -67,6 +67,13 @@ private
     contents.sub("class Elasticsearch < Formula\n", new_class_beginning).tap do |new_formula|
       fail "Could not amend formula for version #{version}" if contents == new_formula
     end
+  end
+
+  # versions prior to 1.5.2 use sha1 signatures, which are now deprecated
+  MINIMUM_VERSION = '1.5.2'.freeze
+
+  def keep_version?(version)
+    Gem::Version.new(version) >= Gem::Version.new(MINIMUM_VERSION)
   end
 end
 
