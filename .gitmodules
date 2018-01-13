@@ -1,0 +1,3 @@
+[submodule "vendor/homebrew-core"]
+	path = vendor/homebrew-core
+	url = https://github.com/Homebrew/homebrew-core.git
