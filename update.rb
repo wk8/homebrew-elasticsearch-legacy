@@ -92,11 +92,12 @@ class Updater
 
 protected
 
+  URL_PREFIX_REGEX = %(https?:\/\/)
   URL_CHARS_REGEX = %([0-9a-zA-Z\\$\\-_.+!*'()\/]+)
   VERSION_REGEX = '((?:[0-9]+\.){2}[0-9]+)'
 
   def version_matchers
-    default_version_regex = /\n\s+url\s+(['"])https?:\/\/#{URL_CHARS_REGEX}#{Regexp.escape(@formula_name)}-#{VERSION_REGEX}[a-z\.]+\1\s*\n/
+    default_version_regex = /\n\s+url\s+(['"])#{URL_PREFIX_REGEX}#{URL_CHARS_REGEX}#{Regexp.escape(@formula_name)}-#{VERSION_REGEX}[a-z\.]+\1\s*\n/
     [VersionMatcher.new(default_version_regex, 2)]
   end
 
