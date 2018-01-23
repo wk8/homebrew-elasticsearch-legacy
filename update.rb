@@ -23,9 +23,9 @@ class VersionMatcher
 end
 
 class FormulaEnumerator
-  def initialize(formula_name, version_matcher)
+  def initialize(formula_name, *version_matchers)
     @formula_name = formula_name
-    @version_matcher = version_matcher
+    @version_matchers = version_matchers
   end
 
   # calls `block' on each version of the formula found, and the latest formula for it
@@ -38,8 +38,7 @@ class FormulaEnumerator
     repo.log(nil).path(formula_path).each do |commit|
       contents = repo.show(commit.sha, formula_path)
 
-      version = @version_matcher.extract_version(contents)
-      fail "Could not extract version for formula #{@formula_name} from commit #{commit.sha}" unless version
+      version = extract_version(contents, commit)
 
       if version != previous_version
         previous_version = version
@@ -54,6 +53,15 @@ private
 
   def repo
     @_repo ||= Git.open(HOMEBREW_CORE_REPO_PATH)
+  end
+
+  def extract_version(contents, commit)
+    @version_matchers.each do |version_matcher|
+      version = version_matcher.extract_version(contents)
+      return version if version
+    end
+
+    fail "Could not extract version for formula #{@formula_name} from commit #{commit.sha}"
   end
 end
 
@@ -110,7 +118,6 @@ protected
   MINIMUM_VERSION = '1.5.2'.freeze
 
   def keep_version?(version)
-    p "wkpo #{version}"
     Gem::Version.new(version) >= Gem::Version.new(MINIMUM_VERSION)
   end
 end
