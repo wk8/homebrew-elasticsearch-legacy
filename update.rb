@@ -66,16 +66,15 @@ private
 end
 
 class Updater
-  def initialize(formula_name, version_matcher)
+  def initialize(formula_name)
     @formula_name = formula_name
-    @version_matcher = version_matcher
   end
 
   def run
     is_latest_version = true
     formulae_directory = repo_path('Formula')
 
-    FormulaEnumerator.new(@formula_name, @version_matcher).each do |version, contents|
+    FormulaEnumerator.new(@formula_name, *version_matchers).each do |version, contents|
       # the latest version might change in a future update of the core repo
       # and no need to create a formula for it anyway
       if is_latest_version
@@ -93,6 +92,11 @@ class Updater
 
 protected
 
+  def version_matchers
+    default_version_regex = /\n\s+url\s+(['"])https?:\/\/[0-9a-zA-Z\$\-_.+!*'()\/]+#{Regexp.escape(@formula_name)}-((?:[0-9]+\.){2}[0-9]+)[a-z\.]+\1\s*\n/
+    [VersionMatcher.new(default_version_regex, 2)]
+  end
+
   def keep_version?(version)
     true
   end
@@ -107,12 +111,10 @@ end
 
 class ElasticsearchUpdater < Updater
   def initialize
-    super('elasticsearch', VersionMatcher.new(VERSION_REGEX, 2))
+    super('elasticsearch')
   end
 
 protected
-
-  VERSION_REGEX = /\n\s+url\s+(['"])https?:\/\/[0-9a-zA-Z\$\-_.+!*'()\/]+elasticsearch-((?:[0-9]+\.){2}[0-9]+)[a-z\.]+\1\s*\n/.freeze
 
   # versions prior to 1.5.2 use sha1 signatures, which are now deprecated
   MINIMUM_VERSION = '1.5.2'.freeze
