@@ -97,7 +97,7 @@ protected
   VERSION_REGEX = '((?:[0-9]+\.){2}[0-9]+)'
 
   def version_matchers
-    default_version_regex = /\n\s+url\s+(['"])#{URL_PREFIX_REGEX}#{URL_CHARS_REGEX}#{Regexp.escape(@formula_name)}-#{VERSION_REGEX}[a-z\.]+\1\s*\n/
+    default_version_regex = /\n\s+url\s+(['"])#{URL_PREFIX_REGEX}#{URL_CHARS_REGEX}#{Regexp.escape(@formula_name)}#{URL_CHARS_REGEX}#{VERSION_REGEX}[a-z\.]+\1\s*\n/
     [VersionMatcher.new(default_version_regex, 2)]
   end
 
@@ -128,4 +128,33 @@ protected
   end
 end
 
-[ElasticsearchUpdater].each { |klass| klass.new.run }
+class KibanaUpdater < Updater
+  def initialize
+    super('kibana')
+  end
+
+protected
+
+  def version_matchers
+    super << tag_version_matcher
+  end
+
+private
+
+  # matches
+  # url "https://github.com/elastic/kibana.git", :tag => "v4.3.1", :revision => "d6e412dc2fa54666bf6ceb54a197508a4bc70baf"
+  # AND
+  # url "https://github.com/elastic/kibana.git",
+  #     :tag => "v5.6.5",
+  #     :revision => "80f98787eb860a4e7ef9b6500cf84b65e331d1fc"
+  # AND
+  # url "https://github.com/elastic/kibana.git",
+  #   tag: "v4.5.1",
+  #   revision: "addb28966a74b61791ceda352cd5b8b1200f2b2a"
+  def tag_version_matcher
+    tag_version_regex = /\n\s+url\s+(['"])#{URL_PREFIX_REGEX}#{URL_CHARS_REGEX}kibana#{URL_CHARS_REGEX}+\1,[\s\n]*(?::tag =>|tag:)\s*(['"])v#{VERSION_REGEX}\2,[\n ]/
+    VersionMatcher.new(tag_version_regex, 3)
+  end
+end
+
+[ElasticsearchUpdater, KibanaUpdater].each { |klass| klass.new.run }
